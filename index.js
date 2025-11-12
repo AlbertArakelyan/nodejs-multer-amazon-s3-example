@@ -3,6 +3,8 @@ const express = require('express');
 const multer = require('multer');
 const uuid = require('uuid').v4;
 
+const { s3UploadV2 } = require('./s3Service');
+
 const app = express();
 
 /**
@@ -44,14 +46,41 @@ const app = express();
  * First argument of `.array` method is the name of the form field that frontend sends
  * Second argument is the max number of files to accept
  */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${uuid()}-${file.originalname}`);
-  },
-});
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'uploads/');
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, `${uuid()}-${file.originalname}`);
+//   },
+// });
+
+// const fileFilter = (req, file, cb) => {
+//   if (file.mimetype.split('/')[0] === 'image') {
+//     cb(null, true);
+//   } else {
+//     cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE'), false, false);
+//   }
+// };
+
+// const upload = multer({
+//   storage,
+//   fileFilter,
+//   limits: {
+//     fileSize: 1024 * 1024, // 1 MB limit
+//     files: 2, // max 2 files
+//   },
+// }); 
+// 
+// app.post('/upload', upload.array('file'), async (req, res) => {
+//   res.json({ status: 'success', result });
+// });
+
+/**
+ * Amazon S3 Upload example,
+ * using memory storage to avoid saving files locally
+ */
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.split('/')[0] === 'image') {
@@ -70,10 +99,11 @@ const upload = multer({
   },
 }); 
 
-app.post('/upload', upload.array('file'), (req, res) => {
-  console.log(req.files);
+app.post('/upload', upload.array('file'), async (req, res) => {
+  const file = req.files[0];
+  const result = await s3UploadV2(file);
   
-  res.json({ status: 'success' });
+  res.json({ status: 'success', result });
 });
 
 // Global error handling middleware for Multer errors (and others)
