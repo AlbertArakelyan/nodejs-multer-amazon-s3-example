@@ -3,7 +3,7 @@ const express = require('express');
 const multer = require('multer');
 const uuid = require('uuid').v4;
 
-const { s3UploadV2 } = require('./s3Service');
+const { s3UploadV2, s3UploadV3 } = require('./s3Service');
 
 const app = express();
 
@@ -99,9 +99,22 @@ const upload = multer({
   },
 }); 
 
+// SDK v2
+// app.post('/upload', upload.array('file'), async (req, res) => {
+//   try {
+//     const results = await s3UploadV2(req.files);
+//     console.log(results);
+    
+//     return res.json({ status: 'success', results });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
+
+// SDK v3
 app.post('/upload', upload.array('file'), async (req, res) => {
   try {
-    const results = await s3UploadV2(req.files);
+    const results = await s3UploadV3(req.files);
     console.log(results);
     
     return res.json({ status: 'success', results });
