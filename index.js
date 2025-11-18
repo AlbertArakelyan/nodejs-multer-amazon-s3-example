@@ -95,15 +95,19 @@ const upload = multer({
   fileFilter,
   limits: {
     fileSize: 1024 * 1024, // 1 MB limit
-    files: 2, // max 2 files
+    files: 3, // max 3 files
   },
 }); 
 
 app.post('/upload', upload.array('file'), async (req, res) => {
-  const file = req.files[0];
-  const result = await s3UploadV2(file);
-  
-  res.json({ status: 'success', result });
+  try {
+    const results = await s3UploadV2(req.files);
+    console.log(results);
+    
+    return res.json({ status: 'success', results });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 // Global error handling middleware for Multer errors (and others)
